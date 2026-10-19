@@ -1,8 +1,9 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
 import { StatusEnum } from '../enums/status.enum';
+import { TimestampEntity } from '../../common/entities/timestamp.entity';
 
 @Entity('todo')
-export class TodoEntity {
+export class TodoEntity extends TimestampEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -12,14 +13,6 @@ export class TodoEntity {
   @Column({ type: 'text' })
   description: string;
 
-  @CreateDateColumn({update: false})
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
-
-  @DeleteDateColumn()
-  deletedAt?: Date;
 
   @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.WAITING })
   status: StatusEnum;
