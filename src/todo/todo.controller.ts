@@ -1,3 +1,4 @@
+
 import {
   Body,
   Controller,
@@ -12,25 +13,28 @@ import { TodoService } from './todo.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 
-
 @Controller('todo')
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
+  // Méthode de Nour : inchangée
   @Get()
   findAll() {
     return this.todoService.findAll();
   }
 
+  // Slide 9 : Ajouter un Todo
   @Post()
-  create(@Body() createTodoDto: CreateTodoDto) {
-    return this.todoService.create(createTodoDto);
+  addTodo(@Body() createTodoDto: CreateTodoDto) {
+    return this.todoService.addTodo(createTodoDto);
   }
+
+  // Slide 10 : Modifier un Todo par son ID
   @Patch(':id')
-update(
-  @Param('id', ParseIntPipe) id: number,
-  @Body() updateTodoDto: UpdateTodoDto,
-) {
-  return this.todoService.update(id, updateTodoDto);
-}
+  updateTodo(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateTodoDto: UpdateTodoDto,
+  ) {
+    return this.todoService.updateTodo(id, updateTodoDto);
+  }
 }

@@ -1,0 +1,81 @@
+
+import { NotFoundException } from '@nestjs/common';
+import { TodoService } from './todo.service';
+import { Repository } from 'typeorm';
+import { TodoEntity } from './entities/todo.entity';
+
+describe('TodoService - addTodo et updateTodo', () => {
+  let service: TodoService;
+  let repository: jest.Mocked<Repository<TodoEntity>>;
+
+  beforeEach(() => {
+    repository = {
+      create: jest.fn(),
+      save: jest.fn(),
+      findOneBy: jest.fn(),
+      merge: jest.fn(),
+    } as unknown as jest.Mocked<Repository<TodoEntity>>;
+
+    service = new TodoService(repository);
+  });
+
+  // Slide 9 : tester addTodo
+  describe('addTodo', () => {
+    it('doit ajouter un nouveau Todo', async () => {
+      const dto = {
+        name: 'Revision',
+        description: 'Reviser le cours NestJS',
+      };
+
+      const todo = { id: 1, ...dto } as TodoEntity;
+
+      repository.create.mockReturnValue(todo);
+      repository.save.mockResolvedValue(todo);
+
+      const result = await service.addTodo(dto);
+
+      expect(repository.create).toHaveBeenCalledWith(dto);
+      expect(repository.save).toHaveBeenCalledWith(todo);
+      expect(result).toEqual(todo);
+    });
+  });
+
+  // Slide 10 : tester updateTodo
+  describe('updateTodo', () => {
+    it('doit modifier un Todo existant', async () => {
+      const todo = {
+        id: 1,
+        name: 'Revision',
+        description: 'Reviser le cours NestJS',
+      } as TodoEntity;
+
+      const dto = { name: 'Examen' };
+
+      const updatedTodo = {
+        ...todo,
+        ...dto,
+      } as TodoEntity;
+
+      repository.findOneBy.mockResolvedValue(todo);
+      repository.merge.mockReturnValue(updatedTodo);
+      repository.save.mockResolvedValue(updatedTodo);
+
+      const result = await service.updateTodo(1, dto);
+
+      expect(repository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(repository.merge).toHaveBeenCalledWith(todo, dto);
+      expect(repository.save).toHaveBeenCalledWith(updatedTodo);
+      expect(result.name).toBe('Examen');
+    });
+
+    it('doit retourner une erreur 404 si le Todo est introuvable', async () => {
+      repository.findOneBy.mockResolvedValue(null);
+
+      await expect(
+        service.updateTodo(9999, { name: 'Test' }),
+      ).rejects.toThrow(NotFoundException);
+
+      expect(repository.save).not.toHaveBeenCalled();
+    });
+  });
+});
