@@ -19,11 +19,21 @@ import { UpdateTodoDto } from './dto/update-todo.dto';
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
-  // Méthode de Nour : inchangée
+
   @Get()
   findAll() {
     return this.todoService.findAll();
   }
+  @Get('stats')
+  getStatusStats() {
+    return this.todoService.getStatusStats();
+  }
+  @Get(':id')
+  getTodoById(@Param('id', ParseIntPipe) id: number) {
+    return this.todoService.getTodoById(id);
+  }
+
+
 
   // Slide 9 - Version 1 : ajout en mémoire
   @Post()
