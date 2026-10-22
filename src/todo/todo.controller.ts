@@ -52,4 +52,11 @@ export class TodoController {
   deleteTodo(@Param('id', ParseIntPipe) id: number) {
   return this.todoService.deleteTodo(id);
   }
+
+  
+  @Delete(':id/soft')
+  softDeleteTodo(@Param('id', ParseIntPipe) id: number) {
+    return this.todoService.softDeleteTodo(id);
+  }
+
 }

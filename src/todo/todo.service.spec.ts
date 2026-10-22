@@ -15,6 +15,7 @@ describe('TodoService - addTodo et updateTodo', () => {
       findOneBy: jest.fn(),
       merge: jest.fn(),
       delete: jest.fn(),
+      softDelete: jest.fn(),
     } as unknown as jest.Mocked<Repository<TodoEntity>>;
 
     service = new TodoService(repository);
@@ -139,4 +140,38 @@ describe('TodoService - addTodo et updateTodo', () => {
       expect(repository.delete).not.toHaveBeenCalled();
     });
   });
+
+  
+  describe('softDeleteTodo', () => {
+    it('should soft delete an existing Todo', async () => {
+      const todo = {
+        id: 1,
+        name: 'Revision',
+        description: 'Reviser NestJS',
+      } as TodoEntity;
+
+      repository.findOneBy.mockResolvedValue(todo);
+      repository.softDelete.mockResolvedValue({
+        affected: 1,
+        raw: {},
+        generatedMaps: [],
+      });
+
+      await service.softDeleteTodo(1);
+
+      expect(repository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(repository.softDelete).toHaveBeenCalledWith(1);
+    });
+
+    it('should throw NotFoundException if the Todo does not exist', async () => {
+      repository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.softDeleteTodo(9999)).rejects.toThrow(
+        NotFoundException,
+      );
+
+      expect(repository.softDelete).not.toHaveBeenCalled();
+    });
+  });
+
 });

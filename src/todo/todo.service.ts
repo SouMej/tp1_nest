@@ -89,5 +89,19 @@ export class TodoService {
   }
 
   await this.todoRepository.delete(id);
-}
+ }
+
+ 
+  async softDeleteTodo(id: number): Promise<void> {
+    const todo = await this.todoRepository.findOneBy({ id });
+
+    if (!todo) {
+      throw new NotFoundException(
+        `Todo avec l'id ${id} introuvable`,
+      );
+    }
+
+    await this.todoRepository.softDelete(id);
+  }
+
 }
