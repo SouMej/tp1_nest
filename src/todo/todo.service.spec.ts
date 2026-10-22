@@ -19,7 +19,35 @@ describe('TodoService - addTodo et updateTodo', () => {
     service = new TodoService(repository);
   });
 
-  // Slide 9 : tester addTodo
+  // Slide 9 - Version 1 : tester l'ajout en mémoire
+  describe('addTodoV1', () => {
+    it('doit créer un Todo en mémoire avec un UUID', () => {
+      const dto = {
+        name: 'Test V1',
+        description: 'Ajout en memoire',
+      };
+
+      const result = service.addTodoV1(dto);
+
+      expect(result.name).toBe('Test V1');
+      expect(result.description).toBe('Ajout en memoire');
+
+      // Vérifier que l'ID est un UUID
+      expect(result.id).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+      );
+
+      // Vérifier la date et le statut
+      expect(result.createdAt).toBeInstanceOf(Date);
+      expect(result.status).toBe('En attente');
+
+      // Vérifier que MySQL n'est pas utilisé
+      expect(repository.create).not.toHaveBeenCalled();
+      expect(repository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  // Slide 9 - Version 2 : tester l'ajout dans MySQL
   describe('addTodo', () => {
     it('doit ajouter un nouveau Todo', async () => {
       const dto = {

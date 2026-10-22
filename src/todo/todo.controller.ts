@@ -7,6 +7,7 @@ import {
   Patch,
   Param,
   ParseIntPipe,
+  Version,
 } from '@nestjs/common';
 
 import { TodoService } from './todo.service';
@@ -23,8 +24,16 @@ export class TodoController {
     return this.todoService.findAll();
   }
 
-  // Slide 9 : Ajouter un Todo
+  // Slide 9 - Version 1 : ajout en mémoire
   @Post()
+  @Version('1')
+  addTodoV1(@Body() createTodoDto: CreateTodoDto) {
+    return this.todoService.addTodoV1(createTodoDto);
+  }
+
+  // Slide 9 - Version 2 : ajout dans MySQL
+  @Post()
+  @Version('2')
   addTodo(@Body() createTodoDto: CreateTodoDto) {
     return this.todoService.addTodo(createTodoDto);
   }

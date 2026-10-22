@@ -2,6 +2,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { randomUUID } from 'node:crypto';
 
 import { TodoEntity } from './entities/todo.entity';
 import { CreateTodoDto } from './dto/create-todo.dto';
@@ -9,17 +10,42 @@ import { UpdateTodoDto } from './dto/update-todo.dto';
 
 @Injectable()
 export class TodoService {
+
+  // Stockage temporaire des Todos V1 en mémoire
+  private readonly todosV1: Array<{
+    id: string;
+    name: string;
+    description: string;
+    createdAt: Date;
+    status: string;
+  }> = [];
+
   constructor(
     @InjectRepository(TodoEntity)
     private readonly todoRepository: Repository<TodoEntity>,
   ) {}
 
-  // Méthode de Nour : ne pas modifier
+  // Méthode de Nour : inchangée
   findAll(): Promise<TodoEntity[]> {
     return this.todoRepository.find();
   }
 
-  // Slide 9 - Ajouter un Todo
+  // Slide 9 - V1 : ajouter un Todo en mémoire
+  addTodoV1(createTodoDto: CreateTodoDto) {
+    const newTodo = {
+      id: randomUUID(),
+      name: createTodoDto.name,
+      description: createTodoDto.description,
+      createdAt: new Date(),
+      status: 'En attente',
+    };
+
+    this.todosV1.push(newTodo);
+
+    return newTodo;
+  }
+
+  // Slide 9 - V2 : ajouter un Todo dans MySQL
   async addTodo(
     createTodoDto: CreateTodoDto,
   ): Promise<TodoEntity> {
@@ -30,7 +56,7 @@ export class TodoService {
     return savedTodo;
   }
 
-  // Slide 10 - Modifier un Todo par son ID
+  // Slide 10 : modifier un Todo par son ID
   async updateTodo(
     id: number,
     updateTodoDto: UpdateTodoDto,
