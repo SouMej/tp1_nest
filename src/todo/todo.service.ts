@@ -78,4 +78,16 @@ export class TodoService {
 
     return await this.todoRepository.save(updatedTodo);
   }
+
+  async deleteTodo(id: number): Promise<void> {
+  const todo = await this.todoRepository.findOneBy({ id });
+
+  if (!todo) {
+    throw new NotFoundException(
+      `Todo avec l'id ${id} introuvable`,
+    );
+  }
+
+  await this.todoRepository.delete(id);
+}
 }

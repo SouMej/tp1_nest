@@ -1,4 +1,4 @@
-
+import { jest } from '@jest/globals';
 import { NotFoundException } from '@nestjs/common';
 import { TodoService } from './todo.service';
 import { Repository } from 'typeorm';
@@ -14,6 +14,7 @@ describe('TodoService - addTodo et updateTodo', () => {
       save: jest.fn(),
       findOneBy: jest.fn(),
       merge: jest.fn(),
+      delete: jest.fn(),
     } as unknown as jest.Mocked<Repository<TodoEntity>>;
 
     service = new TodoService(repository);
@@ -104,6 +105,38 @@ describe('TodoService - addTodo et updateTodo', () => {
       ).rejects.toThrow(NotFoundException);
 
       expect(repository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  
+  describe('deleteTodo', () => {
+    it('should permanently delete an existing Todo', async () => {
+      const todo = {
+        id: 1,
+        name: 'Revision',
+        description: 'Reviser NestJS',
+      } as TodoEntity;
+
+      repository.findOneBy.mockResolvedValue(todo);
+      repository.delete.mockResolvedValue({
+        affected: 1,
+        raw: {},
+      } as any);
+
+      await service.deleteTodo(1);
+
+      expect(repository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(repository.delete).toHaveBeenCalledWith(1);
+    });
+
+    it('should throw NotFoundException if the Todo does not exist', async () => {
+      repository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.deleteTodo(9999)).rejects.toThrow(
+        NotFoundException,
+      );
+
+      expect(repository.delete).not.toHaveBeenCalled();
     });
   });
 });

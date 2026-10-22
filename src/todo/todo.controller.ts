@@ -5,6 +5,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   ParseIntPipe,
   Version,
@@ -45,5 +46,10 @@ export class TodoController {
     @Body() updateTodoDto: UpdateTodoDto,
   ) {
     return this.todoService.updateTodo(id, updateTodoDto);
+  }
+
+  @Delete(':id')
+  deleteTodo(@Param('id', ParseIntPipe) id: number) {
+  return this.todoService.deleteTodo(id);
   }
 }
