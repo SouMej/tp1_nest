@@ -16,6 +16,8 @@ describe('TodoService - addTodo et updateTodo', () => {
       merge: jest.fn(),
       delete: jest.fn(),
       softDelete: jest.fn(),
+      findOne: jest.fn(),
+      restore: jest.fn(),
     } as unknown as jest.Mocked<Repository<TodoEntity>>;
 
     service = new TodoService(repository);
@@ -173,5 +175,42 @@ describe('TodoService - addTodo et updateTodo', () => {
       expect(repository.softDelete).not.toHaveBeenCalled();
     });
   });
+  
+  describe('restoreTodo', () => {
+    it('should restore an existing Todo', async () => {
+      const todo = {
+        id: 1,
+        name: 'Revision',
+        description: 'Reviser NestJS',
+        deletedAt: new Date(),
+      } as TodoEntity;
+
+      repository.findOne.mockResolvedValue(todo);
+      repository.restore.mockResolvedValue({
+        affected: 1,
+        raw: {},
+        generatedMaps: [],
+      });
+
+      await service.restoreTodo(1);
+
+      expect(repository.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
+        withDeleted: true,
+      });
+      expect(repository.restore).toHaveBeenCalledWith(1);
+    });
+
+    it('should throw NotFoundException if the Todo does not exist', async () => {
+      repository.findOne.mockResolvedValue(null);
+
+      await expect(service.restoreTodo(9999)).rejects.toThrow(
+        NotFoundException,
+      );
+
+      expect(repository.restore).not.toHaveBeenCalled();
+    });
+  });
+
 
 });
