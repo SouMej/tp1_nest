@@ -18,10 +18,9 @@ async function bootstrap() {
     }),
   );
 
-  // Activer le versioning URI (v1, v2...)
+  // Activer le versioning URI
   app.enableVersioning({
-    type: VersioningType.URI,
-    defaultVersion: VERSION_NEUTRAL,
+    type: VersioningType.URI
   });
 
   await app.listen(3000);

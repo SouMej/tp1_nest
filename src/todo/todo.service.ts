@@ -28,12 +28,7 @@ export class TodoService {
     private readonly todoRepository: Repository<TodoEntity>,
   ) {}
 
-  async findAll({
-    search,
-    status,
-    page = 1,
-    limit = 10,
-  }: Partial<SearchTodoDto> = {}): Promise<{
+  async findAll({search,status,page = 1,limit = 10,}: Partial<SearchTodoDto> = {}): Promise<{
     data: TodoEntity[];
     total: number;
     page: number;
@@ -44,10 +39,7 @@ export class TodoService {
     let where: FindOptionsWhere<TodoEntity> | FindOptionsWhere<TodoEntity>[];
 
     if (search && status) {
-      where = [
-        { name: textFilter, status },
-        { description: textFilter, status },
-      ];
+      where = [{ name: textFilter, status },{ description: textFilter, status },];
     } else if (search) {
       where = [{ name: textFilter }, { description: textFilter }];
     } else if (status) {
@@ -97,63 +89,35 @@ export class TodoService {
     return todo;
   }
 
-  // ajouter un Todo en mémoire
-  addTodoV1(createTodoDto: CreateTodoDto) {
-    const newTodo = {
-      id: randomUUID(),
-      name: createTodoDto.name,
-      description: createTodoDto.description,
-      createdAt: new Date(),
-      status: 'En attente',
-    };
-
-    this.todosV1.push(newTodo);
-
-    return newTodo;
+  // ajouter un Todo v1
+  async addTodoV1(createTodoDto: CreateTodoDto,): Promise<TodoEntity> {
+    const newTodo = this.todoRepository.create(createTodoDto);
+    const savedTodo = await this.todoRepository.save(newTodo);
+    return savedTodo;
   }
 
-  // ajouter un Todo dans MySQL
-  async addTodo(
-    createTodoDto: CreateTodoDto,
-  ): Promise<TodoEntity> {
+  // ajouter un Todo v2
+  async addTodoV2(createTodoDto: CreateTodoDto,): Promise<TodoEntity> {
     const newTodo = this.todoRepository.create(createTodoDto);
-
     const savedTodo = await this.todoRepository.save(newTodo);
-
     return savedTodo;
   }
 
   // modifier un Todo par son ID
-  async updateTodo(
-    id: number,
-    updateTodoDto: UpdateTodoDto,
-  ): Promise<TodoEntity> {
-    const existingTodo = await this.todoRepository.findOneBy({
-      id,
-    });
-
+  async updateTodo(id: number,updateTodoDto: UpdateTodoDto,): Promise<TodoEntity> {
+    const existingTodo = await this.todoRepository.findOneBy({id,});
     if (!existingTodo) {
-      throw new NotFoundException(
-        `Todo avec l'id ${id} introuvable`,
-      );
+      throw new NotFoundException(`Todo avec l'id ${id} introuvable`,);
     }
 
-    const updatedTodo = this.todoRepository.merge(
-      existingTodo,
-      updateTodoDto,
-    );
-
+    const updatedTodo = this.todoRepository.merge(existingTodo,updateTodoDto,);
     return await this.todoRepository.save(updatedTodo);
   }
 
   async deleteTodo(id: number): Promise<void> {
   const todo = await this.todoRepository.findOneBy({ id });
-
   if (!todo) {
-    throw new NotFoundException(
-      `Todo avec l'id ${id} introuvable`,
-    );
-  }
+    throw new NotFoundException(`Todo avec l'id ${id} introuvable`,);}
 
   await this.todoRepository.delete(id);
  }
@@ -161,12 +125,8 @@ export class TodoService {
  
   async softDeleteTodo(id: number): Promise<void> {
     const todo = await this.todoRepository.findOneBy({ id });
-
     if (!todo) {
-      throw new NotFoundException(
-        `Todo avec l'id ${id} introuvable`,
-      );
-    }
+      throw new NotFoundException(`Todo avec l'id ${id} introuvable`,);}
 
     await this.todoRepository.softDelete(id);
   }
@@ -178,11 +138,7 @@ export class TodoService {
     });
 
     if (!todo) {
-      throw new NotFoundException(
-        `Todo avec l'id ${id} introuvable`,
-      );
-    }
-
+      throw new NotFoundException(`Todo avec l'id ${id} introuvable`,);}
     await this.todoRepository.restore(id);
   }
 

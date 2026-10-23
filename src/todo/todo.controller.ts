@@ -1,17 +1,5 @@
 
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Param,
-  ParseIntPipe,
-  Version,
-  Query,
-} from '@nestjs/common';
-
+import {Body,Controller,Get,Post,Patch,Delete,Param,ParseIntPipe,Version,Query,} from '@nestjs/common';
 import { TodoService } from './todo.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
@@ -37,18 +25,18 @@ export class TodoController {
 
 
 
-  // ajout en mémoire
+  // ajouter todo v1
   @Post()
   @Version('1')
   addTodoV1(@Body() createTodoDto: CreateTodoDto) {
     return this.todoService.addTodoV1(createTodoDto);
   }
 
-  // ajout dans MySQL
+  // ajouter todo v2
   @Post()
   @Version('2')
-  addTodo(@Body() createTodoDto: CreateTodoDto) {
-    return this.todoService.addTodo(createTodoDto);
+  addTodoV2(@Body() createTodoDto: CreateTodoDto) {
+    return this.todoService.addTodoV2(createTodoDto);
   }
 
   // Modifier un Todo par son ID
