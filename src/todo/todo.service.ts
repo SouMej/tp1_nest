@@ -1,12 +1,13 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Like, Repository } from 'typeorm';
 import { randomUUID } from 'node:crypto';
 
 import { TodoEntity } from './entities/todo.entity';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
+import { SearchTodoDto } from './dto/search-todo.dto';
 
 import { StatusEnum } from './enums/status.enum';
 
@@ -27,10 +28,50 @@ export class TodoService {
     private readonly todoRepository: Repository<TodoEntity>,
   ) {}
 
+  async findAll({
+    search,
+    status,
+    page = 1,
+    limit = 10,
+  }: Partial<SearchTodoDto> = {}): Promise<{
+    data: TodoEntity[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const textFilter = search ? Like(`%${search}%`) : undefined;
+    let where: FindOptionsWhere<TodoEntity> | FindOptionsWhere<TodoEntity>[];
 
-  findAll(): Promise<TodoEntity[]> {
-    return this.todoRepository.find();
+    if (search && status) {
+      where = [
+        { name: textFilter, status },
+        { description: textFilter, status },
+      ];
+    } else if (search) {
+      where = [{ name: textFilter }, { description: textFilter }];
+    } else if (status) {
+      where = { status };
+    } else {
+      where = {};
+    }
+
+    const [data, total] = await this.todoRepository.findAndCount({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
+
+
   async getStatusStats(): Promise<Record<string, number>> {
     // Une seule requête : regrouper par statut et compter
     const rows = await this.todoRepository
@@ -56,7 +97,7 @@ export class TodoService {
     return todo;
   }
 
-  // Slide 9 - V1 : ajouter un Todo en mémoire
+  // ajouter un Todo en mémoire
   addTodoV1(createTodoDto: CreateTodoDto) {
     const newTodo = {
       id: randomUUID(),
@@ -71,7 +112,7 @@ export class TodoService {
     return newTodo;
   }
 
-  // Slide 9 - V2 : ajouter un Todo dans MySQL
+  // ajouter un Todo dans MySQL
   async addTodo(
     createTodoDto: CreateTodoDto,
   ): Promise<TodoEntity> {
@@ -82,7 +123,7 @@ export class TodoService {
     return savedTodo;
   }
 
-  // Slide 10 : modifier un Todo par son ID
+  // modifier un Todo par son ID
   async updateTodo(
     id: number,
     updateTodoDto: UpdateTodoDto,
