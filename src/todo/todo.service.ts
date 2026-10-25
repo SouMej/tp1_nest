@@ -89,19 +89,27 @@ export class TodoService {
     return todo;
   }
 
-  // ajouter un Todo v1
-  async addTodoV1(createTodoDto: CreateTodoDto,): Promise<TodoEntity> {
-    const newTodo = this.todoRepository.create(createTodoDto);
-    const savedTodo = await this.todoRepository.save(newTodo);
-    return savedTodo;
+  // V1 : ajouter un Todo en mémoire
+  addTodoV1(createTodoDto: CreateTodoDto) {
+    const newTodo = {
+      id: randomUUID(),
+      name: createTodoDto.name,
+      description: createTodoDto.description,
+      createdAt: new Date(),
+      status: 'En attente',
+    };
+
+    this.todosV1.push(newTodo);
+
+    return newTodo;
   }
 
-  // ajouter un Todo v2
-  async addTodoV2(createTodoDto: CreateTodoDto,): Promise<TodoEntity> {
-    const newTodo = this.todoRepository.create(createTodoDto);
-    const savedTodo = await this.todoRepository.save(newTodo);
-    return savedTodo;
+
+  // V2 : ajouter un Todo dans MySQL
+  addTodoV2(createTodoDto: CreateTodoDto,): Promise<TodoEntity> {
+    return  this.todoRepository.save(createTodoDto);
   }
+
 
   // modifier un Todo par son ID
   async updateTodo(id: number,updateTodoDto: UpdateTodoDto,): Promise<TodoEntity> {
