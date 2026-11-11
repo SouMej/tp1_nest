@@ -1,5 +1,4 @@
-
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Like, Repository } from 'typeorm';
 import { randomUUID } from 'node:crypto';
@@ -14,7 +13,6 @@ import { StatusEnum } from './enums/status.enum';
 @Injectable()
 export class TodoService {
 
-  // Stockage temporaire des Todos V1 en mémoire
   private readonly todosV1: Array<{
     id: string;
     name: string;
@@ -65,21 +63,20 @@ export class TodoService {
 
 
   async getStatusStats(): Promise<Record<string, number>> {
-    // Une seule requête : regrouper par statut et compter
     const rows = await this.todoRepository
       .createQueryBuilder('todo')
       .select('todo.status AS status, COUNT(todo.id) AS total')
       .groupBy('todo.status')
       .getRawMany();
 
-    // Partir de 0 pour chacun des trois statuts
     const result: Record<string, number> = {};
     Object.values(StatusEnum).forEach((s) => (result[s] = 0));
     rows.forEach((r) => (result[r.status] = Number(r.total)));
 
     return result;
   }
- async getTodoById(id: number): Promise<TodoEntity> {
+
+  async getTodoById(id: number): Promise<TodoEntity> {
     const todo = await this.todoRepository.findOne({ where: { id } });
 
     if (!todo) {
@@ -89,7 +86,6 @@ export class TodoService {
     return todo;
   }
 
-  // V1 : ajouter un Todo en mémoire
   addTodoV1(createTodoDto: CreateTodoDto) {
     const newTodo = {
       id: randomUUID(),
@@ -105,36 +101,52 @@ export class TodoService {
   }
 
 
-  // V2 : ajouter un Todo dans MySQL
-  addTodoV2(createTodoDto: CreateTodoDto,): Promise<TodoEntity> {
-    return  this.todoRepository.save(createTodoDto);
+  addTodoV2(createTodoDto: CreateTodoDto, userId?: string): Promise<TodoEntity> {
+    const newTodo = this.todoRepository.create(createTodoDto);
+    if (userId) {
+      newTodo.userId = userId;
+    }
+    return this.todoRepository.save(newTodo);
   }
 
 
-  // modifier un Todo par son ID
-  async updateTodo(id: number,updateTodoDto: UpdateTodoDto,): Promise<TodoEntity> {
-    const existingTodo = await this.todoRepository.findOneBy({id,});
+  async updateTodo(id: number, updateTodoDto: UpdateTodoDto, userId?: string): Promise<TodoEntity> {
+    const existingTodo = await this.todoRepository.findOneBy({ id });
     if (!existingTodo) {
-      throw new NotFoundException(`Todo avec l'id ${id} introuvable`,);
+      throw new NotFoundException(`Todo avec l'id ${id} introuvable`);
     }
 
-    const updatedTodo = this.todoRepository.merge(existingTodo,updateTodoDto,);
+    if (existingTodo.userId && existingTodo.userId !== userId) {
+      throw new UnauthorizedException(`Vous n'avez pas le droit de modifier ce Todo`);
+    }
+
+    const updatedTodo = this.todoRepository.merge(existingTodo, updateTodoDto);
     return await this.todoRepository.save(updatedTodo);
   }
 
-  async deleteTodo(id: number): Promise<void> {
-  const todo = await this.todoRepository.findOneBy({ id });
-  if (!todo) {
-    throw new NotFoundException(`Todo avec l'id ${id} introuvable`,);}
-
-  await this.todoRepository.delete(id);
- }
-
- 
-  async softDeleteTodo(id: number): Promise<void> {
+  async deleteTodo(id: number, userId?: string): Promise<void> {
     const todo = await this.todoRepository.findOneBy({ id });
     if (!todo) {
-      throw new NotFoundException(`Todo avec l'id ${id} introuvable`,);}
+      throw new NotFoundException(`Todo avec l'id ${id} introuvable`);
+    }
+
+    if (todo.userId && todo.userId !== userId) {
+      throw new UnauthorizedException(`Vous n'avez pas le droit de supprimer ce Todo`);
+    }
+
+    await this.todoRepository.delete(id);
+  }
+
+  
+  async softDeleteTodo(id: number, userId?: string): Promise<void> {
+    const todo = await this.todoRepository.findOneBy({ id });
+    if (!todo) {
+      throw new NotFoundException(`Todo avec l'id ${id} introuvable`);
+    }
+
+    if (todo.userId && todo.userId !== userId) {
+      throw new UnauthorizedException(`Vous n'avez pas le droit de supprimer ce Todo`);
+    }
 
     await this.todoRepository.softDelete(id);
   }
@@ -146,9 +158,9 @@ export class TodoService {
     });
 
     if (!todo) {
-      throw new NotFoundException(`Todo avec l'id ${id} introuvable`,);}
+      throw new NotFoundException(`Todo avec l'id ${id} introuvable`);
+    }
     await this.todoRepository.restore(id);
   }
-
 
 }

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { CommonModule } from './common/common.module';
 import { TestModule } from './test/test.module';
 import { TodoModule } from './todo/todo.module';
+import { AuthMiddleware } from './common/middlewares/auth.middleware';
+import { TodoController } from './todo/todo.controller';
 
 @Module({
   imports: [
@@ -30,4 +32,8 @@ import { TodoModule } from './todo/todo.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes(TodoController);
+  }
+}

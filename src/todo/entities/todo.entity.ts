@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { StatusEnum } from '../enums/status.enum';
 import { TimestampEntity } from '../../common/entities/timestamp.entity';
 
@@ -13,7 +13,9 @@ export class TodoEntity extends TimestampEntity {
   @Column({ type: 'text' })
   description: string;
 
-
   @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.WAITING })
   status: StatusEnum;
+
+  @Column({ nullable: true })
+  userId: string;
 }
